@@ -156,7 +156,10 @@ const drawCondition = (text, isTicker) => {
 			const containerWidth = elem.offsetWidth;
 			if (scrollWidth > containerWidth) {
 				content.classList.add('sliding-ticker');
-				const scrollTime = (scrollWidth / 150) * 1000; // 150px per sec
+
+				const speed = settings.tickerSpeed ? settings.tickerSpeed.value : 150;
+				const scrollTime = (scrollWidth / speed) * 1000;
+
 				displayDuration = Math.max(4000, scrollTime + 1000);
 				// Override standard 0.2s wipe
 				content.style.transition = 'none';
@@ -169,7 +172,6 @@ const drawCondition = (text, isTicker) => {
 					content.style.transition = `transform ${scrollTime / 1000}s linear`;
 					content.style.transform = `translateX(-${scrollWidth - containerWidth + 20}px)`; // +20px padding
 				}, 1000);
-
 			}
 		}
 	});

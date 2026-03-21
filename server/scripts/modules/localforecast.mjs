@@ -23,10 +23,10 @@ class LocalForecast extends WeatherDisplay {
 
 		const localForecastTextByDay = [];
 
-		daysWeatherData.forEach((day, index) => {
-			const result = generateLocalForecast(days[index], day.hours);
+		for (let index = 0; index < daysWeatherData.length; index++) {
+			const result = await generateLocalForecast(days[index], daysWeatherData[index].hours, _weatherParameters);
 			localForecastTextByDay.push(JSON.parse(result));
-		});
+		}
 
 		const conditions = [];
 
