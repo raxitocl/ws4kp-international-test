@@ -34,7 +34,7 @@ class Hazards extends WeatherDisplay {
 		const alert = this.checkbox.querySelector('.alert');
 		alert.classList.remove('show');
 
-						try {
+		try {
 			this.data = [];
 
 			if (advancedConfigs.get('enableMeteoChile')) {

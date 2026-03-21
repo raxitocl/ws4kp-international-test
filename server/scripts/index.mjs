@@ -2,6 +2,7 @@ import { json } from './modules/utils/fetch.mjs';
 import noSleep from './modules/utils/nosleep.mjs';
 import { round2 } from './modules/utils/units.mjs';
 import { parseQueryString } from './modules/share.mjs';
+import advancedConfigs from './modules/utils/advancedConfig.mjs';
 import {
 	message as navMessage, hideAllCanvases, isPlaying, resize, resetStatuses, latLonReceived, stopAutoRefreshTimer, registerRefreshData,
 } from './modules/navigation.mjs';
@@ -28,6 +29,19 @@ const BNT_GET_GPS_SELECTOR = '#btnGetGps';
 let isAudioPlaying = false;
 
 const init = () => {
+	// Apply custom logo if configured
+	const customLogoUrl = advancedConfigs.get('customLogoUrl');
+	if (customLogoUrl) {
+		const logos = document.querySelectorAll('.logo img');
+		logos.forEach(logo => {
+			logo.src = customLogoUrl;
+			// Constrain to square space
+			logo.style.objectFit = 'contain';
+			logo.style.width = '100%';
+			logo.style.height = '100%';
+		});
+	}
+
 	document.querySelector(TXT_ADDRESS_SELECTOR).addEventListener('focus', (e) => {
 		e.target.select();
 	});

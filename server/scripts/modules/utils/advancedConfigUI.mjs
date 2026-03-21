@@ -15,6 +15,11 @@ export const createAdvancedConfigUI = () => {
         <div id="advancedConfigModal" style="display:none; position:fixed; top:50%; left:50%; transform:translate(-50%, -50%); width:600px; max-height:80vh; overflow-y:auto; background:white; color:black; padding:20px; border:2px solid #333; z-index:9999; box-shadow:0px 0px 10px rgba(0,0,0,0.5);">
             <h2 style="margin-top:0;">Advanced Configurations</h2>
 
+                        <label>
+                Custom Logo URL (square image):
+                <input type="text" id="ac-custom-logo" style="width:100%;" placeholder="https://example.com/my-logo.png" />
+            </label><br/><br/>
+
             <label>
                 <input type="checkbox" id="ac-use-gemini" /> Use Google Gemini for Local Forecast Text
             </label><br/>
@@ -56,6 +61,8 @@ export const createAdvancedConfigUI = () => {
 
     button.addEventListener('click', () => {
         // Load settings into UI
+        document.querySelector('#ac-custom-logo').value = advancedConfigs.get('customLogoUrl') || '';
+        document.querySelector('#ac-custom-logo').value = advancedConfigs.get('customLogoUrl') || '';
         document.querySelector('#ac-use-gemini').checked = advancedConfigs.get('useGemini') || false;
         document.querySelector('#ac-gemini-key').value = advancedConfigs.get('geminiApiKey') || '';
         document.querySelector('#ac-enable-meteo').checked = advancedConfigs.get('enableMeteoChile') || false;
@@ -77,6 +84,7 @@ export const createAdvancedConfigUI = () => {
 
     document.querySelector('#ac-save').addEventListener('click', () => {
         // Save
+        advancedConfigs.set('customLogoUrl', document.querySelector('#ac-custom-logo').value);
         advancedConfigs.set('useGemini', document.querySelector('#ac-use-gemini').checked);
         advancedConfigs.set('geminiApiKey', document.querySelector('#ac-gemini-key').value);
         advancedConfigs.set('enableMeteoChile', document.querySelector('#ac-enable-meteo').checked);
