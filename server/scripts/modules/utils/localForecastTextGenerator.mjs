@@ -1,8 +1,30 @@
+import advancedConfigs from './advancedConfig.mjs';
 import { directionToNSEW } from './calc.mjs';
 
 import ConversionHelpers from './conversionHelpers.mjs';
 
-function generateLocalForecast(dateStamp, hourlyData) {
+async function generateLocalForecast(dateStamp, hourlyData, _weatherParameters) {
+	if (advancedConfigs.get('useGemini') && advancedConfigs.get('geminiApiKey')) {
+		try {
+			const prompt = `Write a short local weather forecast for ${dateStamp} morning and night based on this data. Make it sound like a 90s weather channel broadcast. Data: ${JSON.stringify(hourlyData.slice(0, 5))}. Return ONLY valid JSON with structure: {"date": "DAY", "periods": {"morning": {"period": "MORNING", "text": "Forecast here..."}, "night": {"period": "NIGHT", "text": "Forecast here..."}}}`;
+
+			const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${advancedConfigs.get('geminiApiKey')}`, {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+			});
+
+			const data = await response.json();
+			if (data.candidates && data.candidates[0].content) {
+			    let text = data.candidates[0].content.parts[0].text;
+			    text = text.replace(/```json/g, '').replace(/```/g, '').trim();
+			    return text;
+			}
+		} catch (e) {
+			console.error("Gemini failed, falling back to local generation", e);
+		}
+	}
+
 	const MORNING_HOURS = [...Array(12).keys()].map((h) => h + 6); // 6 AM - 6 PM
 	const NIGHT_HOURS = [...Array(6).keys()].map((h) => h + 18).concat([...Array(6).keys()]); // 6 PM - 6 AM
 
@@ -93,6 +115,28 @@ function generateLocalForecast(dateStamp, hourlyData) {
 	}
 
 	// Generate forecast for the provided date
+		if (advancedConfigs.get('useGemini') && advancedConfigs.get('geminiApiKey')) {
+		try {
+			const prompt = `Write a short local weather forecast for ${dateStamp} morning and night. Data: ${JSON.stringify(hourlyData.slice(0, 5))}. Return ONLY valid JSON with structure: {"date": "DAY", "periods": {"morning": {"period": "MORNING", "text": "Forecast here..."}, "night": {"period": "NIGHT", "text": "Forecast here..."}}}`;
+
+			const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${advancedConfigs.get('geminiApiKey')}`, {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+			});
+
+			const data = await response.json();
+			let text = data.candidates[0].content.parts[0].text;
+			// Strip markdown if exists
+			text = text.replace(/```json/g, '').replace(/```/g, '').trim();
+
+			const parsed = JSON.parse(text);
+			return JSON.stringify(parsed, null, 2);
+		} catch (e) {
+			console.error("Gemini failed, falling back to local generation", e);
+		}
+	}
+
 	const dayDate = new Date(dateStamp);
 	const dayStr = dayDate.toLocaleDateString('en-US', { weekday: 'long' }).toUpperCase();
 

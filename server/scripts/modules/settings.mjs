@@ -1,5 +1,6 @@
 import Setting from './utils/setting.mjs';
 import btnNavigateRefreshClick from '../index.mjs';
+import { createAdvancedConfigUI } from './utils/advancedConfigUI.mjs';
 
 document.addEventListener('DOMContentLoaded', () => {
 	init();
@@ -20,6 +21,7 @@ const settings = {
 	kiosk: { value: false },
 	scanLines: { value: false },
 	tickerText: { value: '' },
+	tickerSpeed: { value: 150 },
 };
 
 const init = () => {
@@ -62,6 +64,7 @@ const init = () => {
 	]);
 
 	settings.tickerText = new Setting('tickerText', 'Ticker Text', 'text', '', null, true);
+	settings.tickerSpeed = new Setting('tickerSpeed', 'Ticker Speed (px/s)', 'text', '150', null, true);
 	settings.speed = new Setting('speed', 'Speed', 'select', 1.0, null, true, [
 		[0.5, 'Very Fast'],
 		[0.75, 'Fast'],
@@ -90,6 +93,8 @@ const init = () => {
 	const settingsSection = document.querySelector('#settings');
 	settingsSection.innerHTML = '';
 	settingsSection.append(...settingHtml);
+
+	createAdvancedConfigUI();
 };
 
 const temperatureChangeUnits = (value) => {
