@@ -32,6 +32,7 @@ class AdvancedConfigs {
 			regionalCities: '',
 			observationsStations: '',
 			enableMeteoChile: false,
+			customLogoUrl: '',
 		};
 	}
 
