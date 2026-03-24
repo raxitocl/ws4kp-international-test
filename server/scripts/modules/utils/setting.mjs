@@ -34,6 +34,10 @@ class Setting {
 			urlState = urlValue;
 			this.myValue = urlState;
 		}
+		if (type === 'text' && urlValue !== undefined) {
+			urlState = urlValue;
+			this.myValue = urlState;
+		}
 
 		// get existing value if present
 		const storedValue = urlState ?? this.getFromLocalStorage();
@@ -154,6 +158,15 @@ class Setting {
 		} else {
 			this.myValue = e.target.value;
 		}
+		this.storeToLocalStorage(this.myValue);
+
+		// call the change action
+		this.changeAction(this.myValue);
+	}
+
+	textChange(e) {
+		// update the value
+		this.myValue = e.target.value;
 		this.storeToLocalStorage(this.myValue);
 
 		// call the change action
