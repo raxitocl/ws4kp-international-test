@@ -1,5 +1,6 @@
 // travel forecast display
 import STATUS from './status.mjs';
+import advancedConfigs from './utils/advancedConfig.mjs';
 import { json } from './utils/fetch.mjs';
 import { getWeatherRegionalIconFromIconLink } from './icons.mjs';
 import { DateTime } from '../vendor/auto/luxon.mjs';
@@ -17,7 +18,15 @@ class TravelForecast extends WeatherDisplay {
 		// set up the timing
 		this.timing.baseDelay = 20;
 		// page sizes are 4 cities, calculate the number of pages necessary plus overflow
-		const pagesFloat = TravelCities.length / 4;
+
+		const customTC = advancedConfigs.get('travelCities');
+		let tcLength = TravelCities.length;
+		if (customTC) {
+			try {
+				tcLength = JSON.parse(customTC).length;
+			} catch (e) {}
+		}
+		const pagesFloat = tcLength / 4;
 		const pages = Math.floor(pagesFloat) - 2; // first page is already displayed, last page doesn't happen
 		const extra = pages % 1;
 		const timingStep = 75 * 4;
@@ -33,7 +42,18 @@ class TravelForecast extends WeatherDisplay {
 	async getData() {
 		// super checks for enabled
 		if (!super.getData()) return;
-		const forecastPromises = TravelCities.map(async (city) => {
+
+		let cities = TravelCities;
+		const customTC = advancedConfigs.get('travelCities');
+		if (customTC) {
+			try {
+				cities = JSON.parse(customTC);
+			} catch (e) {
+				console.error(e);
+			}
+		}
+
+		const forecastPromises = cities.map(async (city) => {
 			try {
 				// get point then forecast
 				if (!city.point) throw new Error('No pre-loaded point');

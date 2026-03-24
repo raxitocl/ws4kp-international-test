@@ -1,7 +1,10 @@
 import Setting from './utils/setting.mjs';
+// eslint-disable-next-line import/no-cycle
 import btnNavigateRefreshClick from '../index.mjs';
+import { createAdvancedConfigUI } from './utils/advancedConfigUI.mjs';
 
 document.addEventListener('DOMContentLoaded', () => {
+	document.documentElement.setAttribute('data-loaded', 'true');
 	init();
 });
 
@@ -19,16 +22,29 @@ const settings = {
 	hideWebamp: { value: false },
 	kiosk: { value: false },
 	scanLines: { value: false },
+	language: { value: 'en' },
+	tickerText: { value: '' },
+	tickerSpeed: { value: 150 },
 };
 
 const init = () => {
 	// Customizable measurement units
+	settings.language = new Setting('language', 'Language', 'select', 'en', languageChange, true, [
+		['en', 'English'],
+		['es', 'Español'],
+		['fr', 'Français'],
+		['pt', 'Português'],
+		['it', 'Italiano'],
+		['zh', '中文'],
+		['ja', '日本語'],
+	]);
+
 	settings.windUnits = new Setting('windUnits', 'Wind Units', 'select', 2, windUnitsChange, true, [
 		[1, 'm/s'],
 		[2, 'km/h'],
 		[3, 'knots'],
 		[4, 'mph'],
-		[5, 'bft']
+		[5, 'bft'],
 	]);
 	settings.marineWindUnits = new Setting('marineWindUnits', 'Wind Units (Marine)', 'select', 1, marineWindUnitsChange, true, [
 		[1, 'knots'],
@@ -60,6 +76,8 @@ const init = () => {
 		[2, '24-hour'],
 	]);
 
+	settings.tickerText = new Setting('tickerText', 'Ticker Text', 'text', '', null, true);
+	settings.tickerSpeed = new Setting('tickerSpeed', 'Ticker Speed (px/s)', 'text', '150', null, true);
 	settings.speed = new Setting('speed', 'Speed', 'select', 1.0, null, true, [
 		[0.5, 'Very Fast'],
 		[0.75, 'Fast'],
@@ -88,59 +106,72 @@ const init = () => {
 	const settingsSection = document.querySelector('#settings');
 	settingsSection.innerHTML = '';
 	settingsSection.append(...settingHtml);
+
+	createAdvancedConfigUI();
 };
 
-const temperatureChangeUnits = (value) => {
+function languageChange(value) {
+	if (value) {
+		document.documentElement.setAttribute('lang', value);
+		// Force reload to apply language changes
+		// But only if we aren't loading initially
+		if (document.documentElement.hasAttribute('data-loaded')) {
+			window.location.reload();
+		}
+	}
+}
+
+function temperatureChangeUnits(value) {
 	if (value) {
 		document.documentElement.setAttribute('temperature-units', value);
 	}
-};
+}
 
-const distanceChangeUnits = (value) => {
+function distanceChangeUnits(value) {
 	if (value) {
 		document.documentElement.setAttribute('distance-units', value);
 	}
-};
+}
 
-const pressureChangeUnits = (value) => {
+function pressureChangeUnits(value) {
 	if (value) {
 		document.documentElement.setAttribute('pressure-units', value);
 	}
-};
+}
 
-const marineWaveHeightUnitsChange = (value) => {
+function marineWaveHeightUnitsChange(value) {
 	if (value) {
 		document.documentElement.setAttribute('marine-wave-height-units', value);
 	}
-};
+}
 
-const marineWindUnitsChange = (value) => {
+function marineWindUnitsChange(value) {
 	if (value) {
 		document.documentElement.setAttribute('marine-wind-units', value);
 	}
-};
+}
 
-const windUnitsChange = (value) => {
+function windUnitsChange(value) {
 	if (value) {
 		document.documentElement.setAttribute('wind-units', value);
 	}
-};
+}
 
-const hoursChangeFormat = (value) => {
+function hoursChangeFormat(value) {
 	if (value) {
 		document.documentElement.setAttribute('hours-format', value);
 	}
-};
+}
 
-const experimentalFeaturesChange = (value) => {
+function experimentalFeaturesChange(value) {
 	document.documentElement.setAttribute('experimental-features', value);
 
 	// @todo - this is a bit gnarly
 	if (!value) localStorage.removeItem('nearbyCitiesFromLocality');
 	btnNavigateRefreshClick();
-};
+}
 
-const hideWebampChange = async (value) => {
+async function hideWebampChange(value) {
 	if (value) {
 		document.documentElement.setAttribute('hide-webamp', value);
 	} else {
@@ -163,27 +194,27 @@ const hideWebampChange = async (value) => {
 		// eslint-disable-next-line no-undef
 		await webamp.reopen();
 	}
-};
+}
 
-const scanLinesChange = (value) => {
+function scanLinesChange(value) {
 	const container = document.querySelector('#divTwc');
 	if (value) {
 		container.classList.add('scan-lines');
 	} else {
 		container.classList.remove('scan-lines');
 	}
-};
+}
 
-const wideScreenChange = (value) => {
+function wideScreenChange(value) {
 	const container = document.querySelector('#divTwc');
 	if (value) {
 		container.classList.add('wide');
 	} else {
 		container.classList.remove('wide');
 	}
-};
+}
 
-const kioskChange = (value) => {
+function kioskChange(value) {
 	const body = document.querySelector('body');
 	if (value) {
 		body.classList.add('kiosk');
@@ -191,6 +222,6 @@ const kioskChange = (value) => {
 	} else {
 		body.classList.remove('kiosk');
 	}
-};
+}
 
 export default settings;

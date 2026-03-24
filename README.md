@@ -201,6 +201,37 @@ This will update the artifacts in the `/docs` folder. Simply commit them as part
 #### Docker Image
 This is handled automatically as part of CI/CD, when your code is merged to `main`.
 
+
+## Updates in 12.1.0
+
+- Introduces **Advanced Configurations**
+    - You can now customize arrays of cities to track across multiple displays.
+    - Customizable properties include:
+        - **Travel Cities**: Modify the list of cities shown on the "Travel Forecast" screen.
+        - **Regional Cities**: Modify the list of cities shown on the "Regional Forecast" screen.
+        - **Observation Stations**: Override the local list of stations.
+    - These values can be configured by passing JSON objects in the new Advanced Configurations menu.
+- **MeteoChile Hazards**
+    - Adds localized Hazard alert generation for locations in Chile via an experimental MeteoChile integration, accessible from the advanced menu.
+- **Google Gemini Local Forecast Generation**
+    - To provide detailed and localized textual forecast generation (similar to the NWS forecasts available in the USA), you can now configure Google Gemini.
+    - Simply check the "Use Google Gemini for Local Forecast Text" box and provide a valid Google Gemini API Key in the advanced settings menu.
+    - You can [get a Gemini API Key from Google AI Studio](https://aistudio.google.com/app/apikey).
+- **Customizable Scrolling Ticker**
+    - Adds a customizable ticker to the bottom scroll bar for personal announcements or mock ads.
+    - Fully supports widescreen mode and comes with a new "Ticker Speed" option in the settings.
+
+
+## CHANGELOG, PATCHES AND BUGFIXES
+
+- **Scrolling Ticker**: Added a `tickerText` option that displays as a sliding marquee at the bottom with configurable speed, including resolving text cutoff issues.
+- **Advanced Configurations UI**: Created a new modal to let users override lists of Travel Cities, Regional Cities, and Observation Stations using JSON arrays.
+- **Google Gemini Integration**: Added support for Google Gemini to dynamically generate local forecast text based on Open-Meteo data, mimicking a '90s weather channel broadcast.
+- **MeteoChile Hazards**: Integrated a MeteoChile hazards fallback using real-world Spanish alert phrasing when the official API fails.
+- **Hazards Z-Index Bugfix**: Fixed a bug where the Hazards screen would permanently stick to the front and fail to hide during normal rotation.
+- **Accented Font Support**: Updated all TTF fonts to natively map unaccented equivalents for accented characters, eliminating blank spaces when rendering names like "Tarapacá" or "Ñuble".
+- **Custom Logo Upload**: Added `customLogoUrl` to advanced configurations, allowing a custom image URL to overwrite the default WeatherStar 4000+ logo and perfectly contain within the square bounding box.
+
 ## Updates in 12.0.0
 
 - Introduces personal weather station data
@@ -347,3 +378,11 @@ This web site should NOT be used in life threatening weather situations, or be r
 
 The WeatherSTAR 4000 unit and technology is owned by The Weather Channel. This web site is a free, non-profit work by fans. All of the back ground graphics of this web site were created from scratch.  The icons were created by Charles Abel and Nick Smith (http://twcclassics.com/downloads/icons.html) as well as by Malek Masoud.  The fonts were originally created by Nick Smith (http://twcclassics.com/downloads/fonts.html).
 
+
+## Use of Artificial Intelligence
+
+This project was extensively analyzed, debugged, and enhanced using **Jules AI**, an advanced AI software engineering agent. Jules AI was utilized to:
+- Dynamically build and integrate new application features, such as the customizable sliding ticker, Advanced Configurations UI, and multi-language localization.
+- Automate the parsing and restructuring of TrueType/WOFF binary fonts to procedurally generate composite accented characters for international support.
+- Autonomously search for, diagnose, and resolve critical repository bugs, including resolving Z-index issues with canvas rendering, fixing broken `setTimeout` asynchronous loops, and patching runtime UI `TypeError` crashes.
+- Draft pull requests, generate code documentation, and seamlessly refactor legacy ECMAScript code into modernized modules.

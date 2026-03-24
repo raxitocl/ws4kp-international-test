@@ -23,7 +23,15 @@ class Setting {
 			this.myValue = urlState;
 		}
 		if (type === 'select' && urlValue !== undefined) {
-			urlState = parseFloat(urlValue);
+			if (!isNaN(parseFloat(urlValue)) && !isNaN(urlValue - 0)) {
+				urlState = parseFloat(urlValue);
+			} else {
+				urlState = urlValue;
+			}
+			this.myValue = urlState;
+		}
+		if (type === 'text' && urlValue !== undefined) {
+			urlState = urlValue;
 			this.myValue = urlState;
 		}
 
@@ -37,6 +45,9 @@ class Setting {
 		switch (type) {
 			case 'select':
 				this.selectChange({ target: { value: this.myValue } });
+				break;
+			case 'text':
+				this.textChange({ target: { value: this.myValue } });
 				break;
 			case 'checkbox':
 			default:
@@ -61,8 +72,11 @@ class Setting {
 
 		this.values.forEach(([value, text]) => {
 			const option = document.createElement('option');
-			option.value = value.toFixed(2);
-
+			if (typeof value === 'number') {
+				option.value = value.toFixed(2);
+			} else {
+				option.value = value;
+			}
 			option.innerHTML = text;
 			select.append(option);
 		});
@@ -72,6 +86,32 @@ class Setting {
 
 		// set the initial value
 		this.selectHighlight(this.myValue);
+
+		return label;
+	}
+
+	generateText() {
+		const label = document.createElement('label');
+		label.htmlFor = `settings-${this.shortName}-text`;
+		label.id = `settings-${this.shortName}-label`;
+
+		const span = document.createElement('span');
+		span.innerHTML = `${this.name} `;
+		label.append(span);
+
+		const input = document.createElement('input');
+		input.type = 'text';
+		input.id = `settings-${this.shortName}-text`;
+		input.name = `settings-${this.shortName}-text`;
+		// Add placeholder if defaultValue was given, else empty string
+		input.placeholder = this.defaultValue || '';
+		input.value = this.myValue || '';
+
+		input.addEventListener('change', (e) => this.textChange(e));
+
+		label.append(input);
+
+		this.element = input;
 
 		return label;
 	}
@@ -109,7 +149,20 @@ class Setting {
 
 	selectChange(e) {
 		// update the value
-		this.myValue = parseFloat(e.target.value);
+		if (!isNaN(parseFloat(e.target.value)) && !isNaN(e.target.value - 0)) {
+			this.myValue = parseFloat(e.target.value);
+		} else {
+			this.myValue = e.target.value;
+		}
+		this.storeToLocalStorage(this.myValue);
+
+		// call the change action
+		this.changeAction(this.myValue);
+	}
+
+	textChange(e) {
+		// update the value
+		this.myValue = e.target.value;
 		this.storeToLocalStorage(this.myValue);
 
 		// call the change action
@@ -136,6 +189,8 @@ class Setting {
 							return storedValue;
 						case 'select':
 							return storedValue;
+						case 'text':
+							return storedValue;
 						default:
 							return null;
 					}
@@ -158,6 +213,9 @@ class Setting {
 			case 'select':
 				this.selectHighlight(newValue);
 				break;
+			case 'text':
+				this.element.value = newValue;
+				break;
 			case 'checkbox':
 			default:
 				this.element.checked = newValue;
@@ -171,7 +229,11 @@ class Setting {
 	selectHighlight(newValue) {
 		// set the dropdown to the provided value
 		this.element.querySelectorAll('option').forEach((elem) => {
-			elem.selected = newValue.toFixed(2) === elem.value;
+			if (typeof newValue === 'number') {
+				elem.selected = newValue.toFixed(2) === elem.value;
+			} else {
+				elem.selected = newValue === elem.value;
+			}
 		});
 	}
 
@@ -179,6 +241,8 @@ class Setting {
 		switch (this.type) {
 			case 'select':
 				return this.generateSelect();
+			case 'text':
+				return this.generateText();
 			case 'checkbox':
 			default:
 				return this.generateCheckbox();

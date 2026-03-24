@@ -2,6 +2,8 @@ import { elemForEach } from './utils/elem.mjs';
 import getCurrentWeather from './currentweather.mjs';
 import { currentDisplay } from './navigation.mjs';
 import { getConditionText } from './utils/weather.mjs';
+import settings from './settings.mjs';
+import { t } from './utils/i18n.mjs';
 
 // constants
 const degree = String.fromCharCode(176);
@@ -17,7 +19,7 @@ const start = () => {
 
 	// set up the interval if needed
 	if (!interval) {
-		interval = setInterval(incrementInterval, 4000);
+		interval = setTimeout(incrementInterval, 4000);
 	}
 
 	// draw the data
@@ -34,6 +36,9 @@ const incrementInterval = () => {
 	const display = currentDisplay();
 	if (!display?.okToDrawCurrentConditions) {
 		stop(display?.elemId === 'progress');
+		// We still need to keep the loop going!
+		clearTimeout(interval);
+		interval = setTimeout(incrementInterval, 4000);
 		return;
 	}
 	screenIndex = (screenIndex + 1) % (screens.length);
@@ -48,14 +53,24 @@ const drawScreen = async () => {
 	// nothing to do if there's no data yet
 	if (!data) return;
 
-	drawCondition(screens[screenIndex](data));
+	const conditionText = screens[screenIndex](data);
+
+	// If the condition text is empty (e.g. empty ticker text), immediately skip to the next screen
+	if (conditionText === '') {
+		incrementInterval();
+	} else {
+		const isTicker = screenIndex === screens.length - 1;
+		const duration = drawCondition(conditionText, isTicker);
+		clearTimeout(interval);
+		interval = setTimeout(incrementInterval, duration);
+	}
 };
 
 // the "screens" are stored in an array for easy addition and removal
 const screens = [
 	// station name
 	(data) => {
-		let sanitizedText = 'Conditions at ';
+		let sanitizedText = `${t('conditions_at')} `;
 		// Typically an airport with "International" at the second position
 		if (data.city.split(' ').length > 2 && data.city.split(' ')[1].toLowerCase() === 'international') {
 			sanitizedText += `${data.city.split(' ')[0]} Intl. ${data.city.split(' ')[2]} `;
@@ -71,28 +86,28 @@ const screens = [
 	},
 
 	// condition
-	(data) => `Condition: ${getConditionText(data.TextConditions)}`,
+	(data) => `${t('condition')}: ${getConditionText(data.TextConditions)}`,
 
 	// temperature
 	(data) => {
-		const text = `Temp: ${data.Temperature}${degree}${data.TemperatureUnit}`;
+		const text = `${t('temp')}: ${data.Temperature}${degree}${data.TemperatureUnit}`;
 		return text;
 	},
 
 	// humidity
-	(data) => `Humidity: ${data.Humidity}%   Dewpoint: ${data.DewPoint}${degree}${data.TemperatureUnit}`,
+	(data) => `${t('humidity')}: ${data.Humidity}%   ${t('dewpoint')}: ${data.DewPoint}${degree}${data.TemperatureUnit}`,
 
 	// barometric pressure
-	(data) => `Barometric Pressure: ${data.Pressure} ${data.PressureUnit}`,
+	(data) => `${t('barometric_pressure')}: ${data.Pressure} ${data.PressureUnit}`,
 
 	// wind
 	(data) => {
 		let text = data.WindSpeed > 0
-			? `Wind: ${data.WindDirection} ${data.WindSpeed} ${data.WindUnit}`
-			: 'Wind: Calm';
+			? `${t('wind')}: ${data.WindDirection} ${data.WindSpeed} ${data.WindUnit}`
+			: `${t('wind')}: ${t('wind_calm')}`;
 
 		if (data.WindGust > 0) {
-			text += `   Gusts to ${data.WindGust}`;
+			text += `   ${t('gusts_to')} ${data.WindGust}`;
 		}
 		return text;
 	},
@@ -100,12 +115,16 @@ const screens = [
 	// visibility
 	(data) => {
 		const distance = `${data.Ceiling} ${data.CeilingUnit}`;
-		return `Visib: ${data.Visibility} ${data.VisibilityUnit}   Ceiling: ${data.Ceiling === 0 ? 'Unlimited' : distance}`;
+		return `${t('visib')}: ${data.Visibility} ${data.VisibilityUnit}   ${t('ceiling')}: ${data.Ceiling === 0 ? t('unlimited') : distance}`;
 	},
+
+	// custom ticker text
+	() => settings.tickerText.value || '',
 ];
 
 // internal draw function with preset parameters
-const drawCondition = (text) => {
+const drawCondition = (text, isTicker) => {
+	let displayDuration = 4000;
 	elemForEach('.weather-display .scroll .fixed', (elem) => {
 		// Remove old text-layers with exit
 		const layers = elem.querySelectorAll('.text-layer');
@@ -132,7 +151,33 @@ const drawCondition = (text) => {
 
 		// Trigger wipe
 		newLayer.classList.add('active');
+
+		if (isTicker) {
+			const scrollWidth = content.offsetWidth;
+			const containerWidth = elem.offsetWidth;
+			if (scrollWidth > containerWidth) {
+				content.classList.add('sliding-ticker');
+
+				const speed = settings.tickerSpeed ? settings.tickerSpeed.value : 150;
+				const scrollTime = (scrollWidth / speed) * 1000;
+
+				displayDuration = Math.max(4000, scrollTime + 1000);
+				// Override standard 0.2s wipe
+				content.style.transition = 'none';
+				content.style.clipPath = 'inset(0 0% 0 0)';
+
+				// Use transition for sliding instead of keyframes to easily use dynamic values
+				content.style.transform = 'translateX(0)';
+				// Add a small delay so it's readable before it starts scrolling
+				setTimeout(() => {
+					content.style.transition = `transform ${scrollTime / 1000}s linear`;
+					content.style.transform = `translateX(-${scrollWidth - containerWidth + 20}px)`; // +20px padding
+				}, 1000);
+			}
+		}
 	});
+
+	return displayDuration;
 };
 document.addEventListener('DOMContentLoaded', () => {
 	start();
